@@ -1,9 +1,8 @@
 make_ovip_sweeper
 =================
 
-code | http://github.com/kachick/make_ovip_sweeper
-bugs | http://github.com/kachick/make_ovip_sweeper/issues
-
+* [code](http://github.com/kachick/make_ovip_sweeper)
+* [bugs](http://github.com/kachick/make_ovip_sweeper/issues)
 
 Description
 -----------
@@ -14,7 +13,13 @@ That contains reports of relationships with other interfaces.
 Usage
 -----
 
-    make_ovip_sweeper.sh < del_ipaddrs.txt
+    make_ovip_sweeper.sh < del_ipaddrs.txt > ./del_ovtopology.sh
+    chmod 744 ./del_ovtopo.sh
+
+del_ipaddrs.txt
+
+    192.168.1.1
+    192.168.255.254
 
 Requirements
 ------------

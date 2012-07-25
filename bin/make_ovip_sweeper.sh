@@ -2,6 +2,15 @@
 # make_ovip_sweeper.sh
 # Copyright (c) 2011-2012, Kenichi Kamiya
 
+if ( type 'ovtopodump' >/dev/null ); then
+  :
+elif ( type '/opt/OV/bin/ovtopodump' >/dev/null ); then
+  alias ovtopodump='/opt/OV/bin/ovtopodump'
+else
+  echo '# !!! Not found ovtopodump command !!!' >&2
+  exit 1
+fi
+
 initialize_environment()
 {
   set -u
@@ -64,19 +73,12 @@ get_interface_id()
 {
   local -r otd="$1"
   local -r ipaddr="$2"
-  local -r result=$( 
-    echo "$otd" | awk "\$5==\"$ipaddr\"{print \$0}" | filter_interface_id
-  )
+  local -r result=$( echo "$otd" | awk "\$5==\"$ipaddr\"{print \$0}" | filter_interface_id )
 
   if [ "$result" = '' ]; then
-    echo '# matched under ovtopodump, but without ipaddress-field' >&2
     return 1
-  fi
-  
-  if check_ov_oid_pattern "$result"; then
-    echo "$result"
   else
-    error 'Unknown InterfaceID-pattern.' "\nSource:\n$otd\nResult:\n$result"
+    echo "$result"
   fi
 }
 
@@ -117,7 +119,20 @@ make_ovip_sweeper_command() (
     return 1
   fi
 
-  readonly interface_id=$( get_interface_id "$otd_ip" "$ipaddr" )
+  if ( get_interface_id "$otd_ip" "$ipaddr" 1>/dev/null 2>&1 ); then
+    readonly interface_id=$( get_interface_id "$otd_ip" "$ipaddr" )
+    
+    if check_ov_oid_pattern "$interface_id"; then
+      :
+    else
+      error 'Unknown InterfaceID-pattern.' "\nSource:\n$otd_ip\nResult:\n$interface_id"
+    fi
+  else
+    echo '# Matched under ovtopodump, but without ipaddress-field'
+    echo '# Not found in this server'
+    return 1
+  fi
+
   readonly node_id=$( get_node_id "$otd_ip" )
   readonly otd_node=$( get_otd "$node_id" )
   readonly relative_interface_ids=$( echo "$otd_node" | filter_interface_id )
@@ -128,18 +143,15 @@ make_ovip_sweeper_command() (
     if [ "$interface_id" = "$relative_interface_ids" ] || \
     [ "$ipaddr" != "$main_ipaddr" ]; then
       echo "$command"
-      echo "###############################################################################"
-      echo "# Result of $interface_id: "
-      echo "$otd_ip" | perl -nle 'print "#$_"'
     else
       echo '# This object has relationships with other interfaces.'
       echo "# Check object '$node_id' and comment-in below line."
       echo "#$command"
-      echo "###############################################################################"
-      echo "# Result of $node_id: "
-      echo "$otd_node" | perl -nle 'print "#$_"'
     fi
-    
+
+    echo "###############################################################################"
+    echo "# Result of $node_id(NodeID) "
+    echo "$otd_node" | perl -nle 'print "#$_"'
     echo
   else
     echo '# Not found in this server'
@@ -148,11 +160,27 @@ make_ovip_sweeper_command() (
 
 main() (
   echo '#!/bin/sh'
+  echo '# -----------------------------------------------------------------------------'
+  echo '# Setup'
+  echo '# -----------------------------------------------------------------------------'
+  echo 'LANG=C; export LANG'
+  echo
+  echo '# -----------------------------------------------------------------------------'
+  echo '# Record the ovtopodump stdout, before running delete commands'
+  echo '# -----------------------------------------------------------------------------'
+  echo '/opt/OV/bin/ovtopodump -rRISC > "./$( date +%Y-%m-%d-%H:%M:%S ).$$.ovtopodump.bak.before"'
   echo
   
   filter_ipv4addr | while read ipaddr; do
     make_ovip_sweeper_command "$ipaddr"
   done
+
+  echo
+  echo '# -----------------------------------------------------------------------------'
+  echo '# Record the ovtopodump stdout, after running delete commands'
+  echo '# -----------------------------------------------------------------------------'
+  echo '/opt/OV/bin/ovtopodump -rRISC > "./$( date +%Y-%m-%d-%H:%M:%S ).$$.ovtopodump.bak.after"'
+  echo
 )
 
 initialize_environment
