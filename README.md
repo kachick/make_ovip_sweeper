@@ -14,9 +14,9 @@ Usage
 -----
 
     make_ovip_sweeper.sh < del_ipaddrs.txt > ./del_ovtopology.sh
-    chmod 744 ./del_ovtopo.sh
+    chmod 744 ./del_ovtopology.sh
 
-del_ipaddrs.txt
+format of the del_ipaddrs.txt
 
     192.168.1.1
     192.168.255.254
@@ -28,7 +28,8 @@ Requirements
 * Bourne Shell Family
 * perl - 5.8.n
 
-== License
+License
+-------
 
 The 2-clause BSD license
 
