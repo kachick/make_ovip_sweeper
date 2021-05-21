@@ -1,6 +1,9 @@
 make_ovip_sweeper
 =================
 
+* ***This repository is archived***
+* ***No longer maintained***
+
 Description
 -----------
 
@@ -29,12 +32,6 @@ Requirements
 * Bourne Shell Family
 * NetworkNodeManager(OpenView) - 7.n
 * perl - 5.8.n
-
-Link
-----
-
-* [code](http://github.com/kachick/make_ovip_sweeper)
-* [issues](http://github.com/kachick/make_ovip_sweeper/issues)
 
 License
 -------
